@@ -1,4 +1,4 @@
-// src/app/api/admin/confirm/route.js
+// src/app/api/admin/status/route.js
 import { connectDB } from '@/lib/mongodb'
 import Request from '@/models/Request'
 
@@ -7,28 +7,27 @@ export async function POST(req) {
   const { id, status } = await req.json()
 
   try {
-    // Ambil request saat ini
-    const currentRequest = await Request.findById(id)
-    if (!currentRequest) {
+    const request = await Request.findById(id)
+    if (!request) {
       return new Response(JSON.stringify({ error: 'Permintaan tidak ditemukan' }), { status: 404 })
     }
 
-    // Validasi status yang diperbolehkan
+    // Validasi status
     const validTransitions = {
-      'Menunggu Konfirmasi': ['Diproses'],
-      'Diproses': ['Selesai'],
-      'Selesai': []
+      'Menunggu Konfirmasi': 'Diproses',
+      'Diproses': 'Selesai',
+      'Selesai': ''
     }
 
-    if (!validTransitions[currentRequest.status].includes(status)) {
+    if (validTransitions[request.status] !== status) {
       return new Response(JSON.stringify({ error: 'Transisi status tidak valid' }), { status: 400 })
     }
 
-    // Perbarui status jika valid
-    currentRequest.status = status
-    await currentRequest.save()
+    // Perbarui status
+    request.status = status
+    await request.save()
 
-    return new Response(JSON.stringify(currentRequest), { status: 200 })
+    return new Response(JSON.stringify(request), { status: 200 })
   } catch (err) {
     console.error(err)
     return new Response(JSON.stringify({ error: 'Gagal memperbarui status' }), { status: 500 })

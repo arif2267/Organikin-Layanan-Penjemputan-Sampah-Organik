@@ -11,12 +11,16 @@
   "dependencies": {
     "@headlessui/react": "^2.2.1",
     "bcryptjs": "^3.0.2",
+    "chart.js": "^4.4.9",
     "framer-motion": "^12.6.5",
     "lucide-react": "^0.487.0",
     "mongoose": "^8.13.2",
     "next": "15.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.3",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

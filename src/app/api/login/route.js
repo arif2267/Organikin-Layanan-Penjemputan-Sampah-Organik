@@ -4,17 +4,24 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(req) {
   await connectDB()
-  const { email, password } = await req.json()
 
-  const user = await User.findOne({ email })
-  if (!user) {
-    return new Response(JSON.stringify({ message: 'User not found' }), { status: 404 })
+  try {
+    const { email, password } = await req.json()
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return new Response(JSON.stringify({ message: 'Email atau password salah.' }), { status: 401 })
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return new Response(JSON.stringify({ message: 'Email atau password salah.' }), { status: 401 })
+    }
+
+    // Kembalikan role dari user
+    return new Response(JSON.stringify({ role: user.role }), { status: 200 })
+  } catch (error) {
+    console.error('Login error:', error)
+    return new Response(JSON.stringify({ message: 'Terjadi kesalahan saat login.' }), { status: 500 })
   }
-
-  const isMatch = await bcrypt.compare(password, user.password)
-  if (!isMatch) {
-    return new Response(JSON.stringify({ message: 'Invalid credentials' }), { status: 401 })
-  }
-
-  return new Response(JSON.stringify({ message: 'Login successful' }), { status: 200 })
 }
