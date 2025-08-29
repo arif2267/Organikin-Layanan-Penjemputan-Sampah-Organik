@@ -11,6 +11,7 @@ export default function EducationPage() {
   const [score, setScore] = useState(0)
   const [answers, setAnswers] = useState([])
   const [timeLeft, setTimeLeft] = useState(30)
+  const [nameError, setNameError] = useState('')
   const [leaderboard, setLeaderboard] = useState([
     { id: 1, name: "Eco Warrior", score: 95, time: "2:30", date: "2024-06-01" },
     { id: 2, name: "Green Hero", score: 90, time: "2:45", date: "2024-06-01" },
@@ -83,18 +84,22 @@ export default function EducationPage() {
     }
   ]
 
-  // Memuat leaderboard dari localStorage saat komponen dimuat
-  useEffect(() => {
-    const savedLeaderboard = localStorage.getItem('leaderboard')
-    if (savedLeaderboard) {
-      setLeaderboard(JSON.parse(savedLeaderboard))
+  // Validate name input
+  const validateName = (name) => {
+    if (!name.trim()) {
+      return 'Nama tidak boleh kosong'
     }
-  }, [])
-
-  // Menyimpan leaderboard ke localStorage setiap kali berubah
-  useEffect(() => {
-    localStorage.setItem('leaderboard', JSON.stringify(leaderboard))
-  }, [leaderboard])
+    if (name.trim().length < 2) {
+      return 'Nama minimal 2 karakter'
+    }
+    if (name.trim().length > 20) {
+      return 'Nama maksimal 20 karakter'
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return 'Nama hanya boleh berisi huruf dan spasi'
+    }
+    return ''
+  }
 
   // Timer untuk kuis
   useEffect(() => {
@@ -106,14 +111,28 @@ export default function EducationPage() {
     }
   }, [timeLeft, currentScreen])
 
-  const startQuiz = () => {
-    if (playerName.trim()) {
-      setCurrentScreen('quiz')
-      setCurrentQuestion(0)
-      setScore(0)
-      setAnswers([])
-      setTimeLeft(30)
+  const handleNameChange = (e) => {
+    const value = e.target.value
+    setPlayerName(value)
+    if (nameError) {
+      const error = validateName(value)
+      setNameError(error)
     }
+  }
+
+  const startQuiz = () => {
+    const error = validateName(playerName)
+    if (error) {
+      setNameError(error)
+      return
+    }
+    
+    setNameError('')
+    setCurrentScreen('quiz')
+    setCurrentQuestion(0)
+    setScore(0)
+    setAnswers([])
+    setTimeLeft(30)
   }
 
   const handleAnswerSelect = (answerIndex) => {
@@ -144,7 +163,7 @@ export default function EducationPage() {
       
       const newEntry = {
         id: Date.now(),
-        name: playerName,
+        name: playerName.trim(),
         score: finalScore,
         time: `${Math.floor(totalTime / 60)}:${(totalTime % 60).toString().padStart(2, '0')}`,
         date: currentDate
@@ -176,120 +195,183 @@ export default function EducationPage() {
     setScore(0)
     setAnswers([])
     setTimeLeft(30)
+    setNameError('')
   }
 
   const WelcomeScreen = () => (
     <div className="text-center space-y-8 opacity-0 translate-y-5 animate-[fadeInUp_0.5s_ease-out_forwards]">
-      <div className="space-y-4">
-        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto scale-0 animate-[scaleIn_0.5s_ease-out_0.2s_forwards]">
-          <Brain className="w-10 h-10 text-white" />
+      <div className="space-y-6">
+        <div className="relative">
+          <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto scale-0 animate-[scaleIn_0.5s_ease-out_0.2s_forwards] shadow-2xl">
+            <Brain className="w-12 h-12 text-white" />
+          </div>
+          <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+            <Leaf className="w-4 h-4 text-green-800" />
+          </div>
         </div>
-        <h1 className="text-4xl font-bold text-gray-800">Kuis Edukasi Lingkungan</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Uji pengetahuan Anda tentang lingkungan dan pengelolaan sampah organik! 
-          Kuis ini terdiri dari 10 pertanyaan dengan waktu 30 detik per soal.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-          <Target className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-          <h3 className="font-semibold text-gray-800 mb-2">10 Pertanyaan</h3>
-          <p className="text-sm text-gray-600">Soal pilihan ganda tentang lingkungan</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-          <Clock className="w-8 h-8 text-orange-500 mx-auto mb-3" />
-          <h3 className="font-semibold text-gray-800 mb-2">30 Detik</h3>
-          <p className="text-sm text-gray-600">Waktu untuk setiap pertanyaan</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-          <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
-          <h3 className="font-semibold text-gray-800 mb-2">Skor & Ranking</h3>
-          <p className="text-sm text-gray-600">Lihat peringkat Anda di leaderboard</p>
+        <div className="space-y-3">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            Kuis Edukasi Lingkungan
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            🌱 Uji pengetahuan Anda tentang lingkungan dan pengelolaan sampah organik! 
+            <br />Kuis interaktif dengan 10 pertanyaan menarik dan waktu 30 detik per soal.
+          </p>
         </div>
       </div>
 
-      <button
-        onClick={() => setCurrentScreen('nameInput')}
-        className="bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:scale-105 active:scale-95 transition-transform"
-      >
-        Mulai Kuis
-      </button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <Target className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-3">10 Pertanyaan</h3>
+          <p className="text-gray-600 leading-relaxed">Soal pilihan ganda yang menarik tentang lingkungan dan sustainability</p>
+        </div>
+        <div className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <Clock className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-3">30 Detik</h3>
+          <p className="text-gray-600 leading-relaxed">Waktu terbatas untuk setiap pertanyaan menambah tantangan</p>
+        </div>
+        <div className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <Trophy className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-3">Skor & Ranking</h3>
+          <p className="text-gray-600 leading-relaxed">Lihat peringkat Anda di leaderboard global dan riwayat permainan</p>
+        </div>
+      </div>
+
+      <div className="pt-4">
+        <button
+          onClick={() => setCurrentScreen('nameInput')}
+          className="group bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-12 py-4 rounded-2xl text-xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 relative overflow-hidden"
+        >
+          <span className="relative z-10 flex items-center gap-3">
+            <Star className="w-6 h-6" />
+            Mulai Kuis Sekarang
+          </span>
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </button>
+      </div>
     </div>
   )
 
   const NameInputScreen = () => (
-    <div className="max-w-md mx-auto text-center space-y-6 opacity-0 translate-x-12 animate-[slideInRight_0.5s_ease-out_forwards]">
-      <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
-        <Users className="w-8 h-8 text-white" />
-      </div>
-      <h2 className="text-2xl font-bold text-gray-800">Masukkan Nama Anda</h2>
-      <p className="text-gray-600">Nama akan ditampilkan di leaderboard</p>
-      
+    <div className="max-w-lg mx-auto text-center space-y-8 opacity-0 translate-x-12 animate-[slideInRight_0.5s_ease-out_forwards]">
       <div className="space-y-4">
-        <input
-          type="text"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && playerName.trim()) {
-              startQuiz()
-            }
-          }}
-          placeholder="Masukkan nama Anda"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-center text-lg text-gray-900"
-          maxLength={20}
-          autoFocus
-        />
-        <div className="flex gap-3">
+        <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+          <Users className="w-10 h-10 text-white" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Siapa Nama Anda?</h2>
+          <p className="text-gray-600 text-lg">Nama akan ditampilkan di leaderboard global</p>
+        </div>
+      </div>
+      
+      <div className="bg-white p-8 rounded-2xl shadow-xl space-y-6">
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={playerName}
+            onChange={handleNameChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                startQuiz()
+              }
+            }}
+            onBlur={() => {
+              if (playerName) {
+                const error = validateName(playerName)
+                setNameError(error)
+              }
+            }}
+            placeholder="Masukkan nama Anda..."
+            className={`w-full px-6 py-4 border-2 rounded-xl focus:outline-none text-center text-lg font-medium transition-all duration-300 ${
+              nameError 
+                ? 'border-red-300 focus:border-red-500 bg-red-50 text-red-900 placeholder-red-400' 
+                : 'border-gray-200 focus:border-green-500 focus:bg-green-50 text-gray-900 placeholder-gray-400'
+            }`}
+            maxLength={20}
+            autoFocus
+          />
+          {nameError && (
+            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+              <XCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{nameError}</span>
+            </div>
+          )}
+          {!nameError && playerName && (
+            <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Nama terlihat bagus! Siap untuk memulai?</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex gap-4">
           <button
-            onClick={() => setCurrentScreen('welcome')}
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold transition-colors"
+            onClick={() => {
+              setCurrentScreen('welcome')
+              setNameError('')
+              setPlayerName('')
+            }}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
           >
-            Kembali
+            ← Kembali
           </button>
           <button
             onClick={startQuiz}
-            disabled={!playerName.trim()}
-            className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors"
+            disabled={!playerName.trim() || nameError}
+            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:shadow-none"
           >
-            Mulai Kuis
+            Mulai Kuis! 🚀
           </button>
         </div>
+      </div>
+
+      <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl">
+        💡 <strong>Tips:</strong> Gunakan nama yang mudah diingat dan tidak mengandung karakter khusus
       </div>
     </div>
   )
 
   const QuizScreen = () => (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" />
+      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+            <BookOpen className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Halo, {playerName}!</h3>
-            <p className="text-sm text-gray-600">Soal {currentQuestion + 1} dari {questions.length}</p>
+            <h3 className="text-xl font-bold text-gray-900">Halo, {playerName}! 👋</h3>
+            <p className="text-gray-600">Soal {currentQuestion + 1} dari {questions.length}</p>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-green-600">{score}</div>
-          <div className="text-sm text-gray-600">Skor</div>
+          <div className="text-3xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent">{score}</div>
+          <div className="text-sm text-gray-600 font-medium">Skor</div>
         </div>
       </div>
 
       {/* Timer */}
-      <div className="bg-white p-4 rounded-xl shadow-lg">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">Waktu tersisa</span>
-          <span className={`text-lg font-bold transition-colors duration-300 ${timeLeft <= 10 ? 'text-red-500' : 'text-green-600'}`}>
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-gray-600 font-medium">Waktu tersisa</span>
+          <span className={`text-2xl font-bold transition-all duration-300 ${
+            timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-green-600'
+          }`}>
             {timeLeft}s
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
           <div
-            className={`h-2 rounded-full transition-colors duration-300 ${timeLeft <= 10 ? 'bg-red-500' : 'bg-green-500'}`}
+            className={`h-3 rounded-full transition-all duration-300 ${
+              timeLeft <= 10 ? 'bg-gradient-to-r from-red-400 to-red-600' : 'bg-gradient-to-r from-green-400 to-emerald-600'
+            }`}
             style={{ 
               width: `${(timeLeft / 30) * 100}%`,
               transition: 'width 1s linear'
@@ -299,41 +381,47 @@ export default function EducationPage() {
       </div>
 
       {/* Question */}
-      <div className="bg-white p-6 rounded-xl shadow-lg">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed">
           {questions[currentQuestion].question}
         </h2>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {questions[currentQuestion].options.map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswerSelect(index)}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all hover:scale-[1.02] active:scale-[0.98] ${
+              className={`w-full p-6 text-left rounded-xl border-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] group ${
                 selectedAnswer === index
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                  ? 'border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 shadow-lg'
+                  : 'border-gray-200 hover:border-green-300 hover:bg-green-50 bg-white shadow-sm hover:shadow-lg'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  selectedAnswer === index ? 'border-green-500 bg-green-500' : 'border-gray-300'
+              <div className="flex items-center gap-4">
+                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                  selectedAnswer === index 
+                    ? 'border-green-500 bg-green-500 shadow-lg' 
+                    : 'border-gray-300 group-hover:border-green-400'
                 }`}>
-                  {selectedAnswer === index && <CheckCircle className="w-4 h-4 text-white" />}
+                  {selectedAnswer === index ? (
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  ) : (
+                    <div className="w-3 h-3 rounded-full bg-gray-300 group-hover:bg-green-400 transition-colors"></div>
+                  )}
                 </div>
-                <span className="text-gray-700">{option}</span>
+                <span className="text-gray-700 text-lg font-medium">{option}</span>
               </div>
             </button>
           ))}
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-8 flex justify-end">
           <button
             onClick={handleNextQuestion}
             disabled={selectedAnswer === null}
-            className="bg-green-600 hover:bg-green-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:shadow-none"
           >
-            {currentQuestion === questions.length - 1 ? 'Selesai' : 'Lanjut'}
+            {currentQuestion === questions.length - 1 ? 'Selesai 🎉' : 'Lanjut →'}
           </button>
         </div>
       </div>
@@ -352,77 +440,85 @@ export default function EducationPage() {
       : 'N/A'
 
     return (
-      <div className="max-w-2xl mx-auto text-center space-y-8 opacity-0 scale-90 animate-[scaleInFade_0.5s_ease-out_forwards]">
-        <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto scale-0 animate-[scaleIn_0.5s_ease-out_0.2s_forwards] ${
-          percentage >= 70 ? 'bg-green-500' : 'bg-orange-500'
-        }`}>
-          {percentage >= 70 ? (
-            <Trophy className="w-12 h-12 text-white" />
-          ) : (
-            <Award className="w-12 h-12 text-white" />
-          )}
+      <div className="max-w-3xl mx-auto text-center space-y-8 opacity-0 scale-90 animate-[scaleInFade_0.5s_ease-out_forwards]">
+        <div className="space-y-6">
+          <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto scale-0 animate-[scaleIn_0.5s_ease-out_0.2s_forwards] shadow-2xl ${
+            percentage >= 70 ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-orange-400 to-red-500'
+          }`}>
+            {percentage >= 70 ? (
+              <Trophy className="w-14 h-14 text-white" />
+            ) : (
+              <Award className="w-14 h-14 text-white" />
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-4xl font-bold text-gray-800">🎉 Kuis Selesai!</h2>
+            <p className="text-xl text-gray-600">
+              Selamat <span className="font-bold text-green-600">{playerName}</span>, ini adalah hasil Anda:
+            </p>
+          </div>
         </div>
 
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h2>
-          <p className="text-lg text-gray-600">Selamat <span className="text-gray-900">{playerName}</span>, ini adalah hasil Anda:</p>
-        </div>
-
-        <div className="bg-white p-8 rounded-xl shadow-lg space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{score}</div>
-              <div className="text-sm text-gray-600">Skor Total</div>
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center p-4 bg-green-50 rounded-xl">
+              <div className="text-4xl font-bold text-green-600 mb-1">{score}</div>
+              <div className="text-sm text-gray-600 font-medium">Skor Total</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{percentage.toFixed(0)}%</div>
-              <div className="text-sm text-gray-600">Persentase</div>
+            <div className="text-center p-4 bg-blue-50 rounded-xl">
+              <div className="text-4xl font-bold text-blue-600 mb-1">{percentage.toFixed(0)}%</div>
+              <div className="text-sm text-gray-600 font-medium">Persentase</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">{grade}</div>
-              <div className="text-sm text-gray-600">Grade</div>
+            <div className="text-center p-4 bg-purple-50 rounded-xl">
+              <div className="text-4xl font-bold text-purple-600 mb-1">{grade}</div>
+              <div className="text-sm text-gray-600 font-medium">Grade</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">{rank === 'N/A' ? 'N/A' : `#${rank}`}</div>
-              <div className="text-sm text-gray-600">Peringkat</div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl">
+              <div className="text-4xl font-bold text-orange-600 mb-1">{rank === 'N/A' ? 'N/A' : `#${rank}`}</div>
+              <div className="text-sm text-gray-600 font-medium">Peringkat</div>
             </div>
           </div>
 
           <div className="border-t pt-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Ringkasan Jawaban:</h3>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">📊 Ringkasan Jawaban:</h3>
+            <div className="grid grid-cols-5 md:grid-cols-10 gap-2 max-w-2xl mx-auto">
               {answers.map((answer, index) => (
-                <div key={index} className="flex items-center justify-between p-2 rounded bg-gray-50">
-                  <span className="text-sm text-gray-600">Soal {index + 1}</span>
-                  {answer.isCorrect ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-500" />
-                  )}
+                <div key={index} className="text-center">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-1 ${
+                    answer.isCorrect ? 'bg-green-100' : 'bg-red-100'
+                  }`}>
+                    {answer.isCorrect ? (
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <XCircle className="w-6 h-6 text-red-500" />
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-600">{index + 1}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => setCurrentScreen('leaderboard')}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Lihat Peringkat
+            🏆 Lihat Peringkat
           </button>
           <button
             onClick={() => setCurrentScreen('scores')}
-            className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Riwayat Skor
+            📈 Riwayat Skor
           </button>
           <button
             onClick={resetQuiz}
-            className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Main Lagi
+            🔄 Main Lagi
           </button>
         </div>
       </div>
@@ -431,61 +527,80 @@ export default function EducationPage() {
 
   const ScoresScreen = () => (
     <div className="max-w-4xl mx-auto space-y-6 opacity-0 translate-y-5 animate-[fadeInUp_0.5s_ease-out_forwards]">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <BookOpen className="w-8 h-8 text-white" />
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+          <BookOpen className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Riwayat Skor Anda</h2>
-        <p className="text-gray-600">Semua hasil kuis yang pernah Anda mainkan</p>
+        <div>
+          <h2 className="text-4xl font-bold text-gray-800 mb-2">📈 Riwayat Skor Anda</h2>
+          <p className="text-lg text-gray-600">Semua hasil kuis yang pernah Anda mainkan</p>
+        </div>
       </div>
 
       {playerScores.length === 0 ? (
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-8 h-8 text-gray-400" />
+        <div className="bg-white p-12 rounded-2xl shadow-xl text-center border border-gray-100">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Trophy className="w-10 h-10 text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">Belum Ada Riwayat</h3>
-          <p className="text-gray-500 mb-4">Mainkan kuis untuk melihat riwayat skor Anda</p>
+          <h3 className="text-2xl font-bold text-gray-600 mb-3">Belum Ada Riwayat</h3>
+          <p className="text-gray-500 mb-8 text-lg">Mainkan kuis untuk melihat riwayat skor Anda</p>
           <button
             onClick={resetQuiz}
-            className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Mulai Kuis
+            🚀 Mulai Kuis Sekarang
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4">
-            <h3 className="text-white font-semibold text-lg">Riwayat Permainan</h3>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-6">
+            <h3 className="text-white font-bold text-xl flex items-center gap-3">
+              <BarChart3 className="w-6 h-6" />
+              Riwayat Permainan Anda
+            </h3>
           </div>
           
-          <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
             {playerScores.slice().reverse().map((entry, index) => (
               <div
                 key={entry.id}
-                className={`p-4 opacity-0 -translate-x-5 animate-[slideInLeft_0.5s_ease-out_${index * 100}ms_forwards]`}
+                className={`p-6 opacity-0 -translate-x-5 animate-[slideInLeft_0.5s_ease-out_${index * 100}ms_forwards] hover:bg-gray-50 transition-colors`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${
-                      entry.score >= 80 ? 'bg-green-500' :
-                      entry.score >= 60 ? 'bg-yellow-500' :
-                      'bg-red-500'
+                  <div className="flex items-center gap-6">
+                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center font-bold text-white text-xl shadow-lg ${
+                      entry.score >= 80 ? 'bg-gradient-to-br from-green-400 to-emerald-600' :
+                      entry.score >= 60 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                      'bg-gradient-to-br from-red-400 to-red-600'
                     }`}>
                       {entry.score}
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{entry.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {entry.correctAnswers} dari {entry.questions} benar • Waktu: {entry.time}
+                      <div className="text-xl font-bold text-gray-900">{entry.name}</div>
+                      <div className="text-gray-600 flex items-center gap-4 mt-1">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          {entry.correctAnswers} dari {entry.questions} benar
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-blue-500" />
+                          {entry.time}
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-500">{entry.date}</div>
+                      <div className="text-sm text-gray-500 mt-1">{entry.date}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-purple-600">{entry.score}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-3xl font-bold text-purple-600">{entry.score}</div>
+                    <div className="text-lg text-gray-600 font-medium">
                       {Math.round((entry.correctAnswers / entry.questions) * 100)}%
+                    </div>
+                    <div className={`text-sm font-medium px-3 py-1 rounded-full mt-2 ${
+                      entry.score >= 80 ? 'bg-green-100 text-green-700' :
+                      entry.score >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {entry.score >= 80 ? 'Excellent' : entry.score >= 60 ? 'Good' : 'Needs Practice'}
                     </div>
                   </div>
                 </div>
@@ -498,15 +613,15 @@ export default function EducationPage() {
       <div className="flex gap-4 justify-center">
         <button
           onClick={() => setCurrentScreen('leaderboard')}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
         >
-          Lihat Peringkat
+          🏆 Lihat Peringkat
         </button>
         <button
           onClick={resetQuiz}
-          className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
         >
-          Main Lagi
+          🔄 Main Lagi
         </button>
       </div>
     </div>
@@ -514,48 +629,73 @@ export default function EducationPage() {
 
   const LeaderboardScreen = () => (
     <div className="max-w-4xl mx-auto space-y-6 opacity-0 translate-y-5 animate-[fadeInUp_0.5s_ease-out_forwards]">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <BarChart3 className="w-8 h-8 text-white" />
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+          <BarChart3 className="w-10 h-10 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Papan Peringkat</h2>
-        <p className="text-gray-600">Top 10 pemain dengan skor tertinggi</p>
+        <div>
+          <h2 className="text-4xl font-bold text-gray-800 mb-2">🏆 Papan Peringkat</h2>
+          <p className="text-lg text-gray-600">Top 10 pemain dengan skor tertinggi</p>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-4">
-          <h3 className="text-white font-semibold text-lg">Leaderboard Global</h3>
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+          <h3 className="text-white font-bold text-xl flex items-center gap-3">
+            <Trophy className="w-6 h-6" />
+            Leaderboard Global
+          </h3>
         </div>
         
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-100">
           {leaderboard.map((entry, index) => (
             <div
               key={entry.id}
-              className={`p-4 flex items-center justify-between opacity-0 -translate-x-5 animate-[slideInLeft_0.5s_ease-out_${index * 100}ms_forwards] ${
-                entry.name === playerName ? 'bg-green-50 border-l-4 border-green-500' : ''
+              className={`p-6 flex items-center justify-between opacity-0 -translate-x-5 animate-[slideInLeft_0.5s_ease-out_${index * 100}ms_forwards] transition-colors ${
+                entry.name === playerName ? 'bg-green-50 border-l-4 border-green-500' : 'hover:bg-gray-50'
               }`}
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  index === 0 ? 'bg-yellow-500 text-white' :
-                  index === 1 ? 'bg-gray-400 text-white' :
-                  index === 2 ? 'bg-orange-500 text-white' :
+              <div className="flex items-center gap-6">
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg ${
+                  index === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white' :
+                  index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white' :
+                  index === 2 ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white' :
                   'bg-gray-100 text-gray-600'
                 }`}>
                   {index < 3 ? (
-                    <Trophy className="w-5 h-5" />
+                    <Trophy className="w-8 h-8" />
                   ) : (
                     index + 1
                   )}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{entry.name}</div>
-                  <div className="text-sm text-gray-600">Waktu: {entry.time}</div>
+                  <div className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    {entry.name}
+                    {entry.name === playerName && (
+                      <span className="bg-green-100 text-green-700 text-sm px-2 py-1 rounded-full font-medium">
+                        Anda
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-gray-600 flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Waktu: {entry.time}
+                  </div>
+                  <div className="text-sm text-gray-500">{entry.date}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl font-bold text-green-600">{entry.score}</div>
-                <div className="text-sm text-gray-600">poin</div>
+                <div className="text-3xl font-bold text-green-600">{entry.score}</div>
+                <div className="text-sm text-gray-600 font-medium">poin</div>
+                {index < 3 && (
+                  <div className={`text-xs font-bold px-2 py-1 rounded-full mt-1 ${
+                    index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                    index === 1 ? 'bg-gray-100 text-gray-700' :
+                    'bg-orange-100 text-orange-700'
+                  }`}>
+                    {index === 0 ? '🥇 GOLD' : index === 1 ? '🥈 SILVER' : '🥉 BRONZE'}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -566,15 +706,15 @@ export default function EducationPage() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => setCurrentScreen('scores')}
-            className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Riwayat Skor
+            📈 Riwayat Skor
           </button>
           <button
             onClick={resetQuiz}
-            className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold transition-all duration-300 hover:scale-105 shadow-lg"
           >
-            Main Lagi
+            🔄 Main Lagi
           </button>
         </div>
       </div>
