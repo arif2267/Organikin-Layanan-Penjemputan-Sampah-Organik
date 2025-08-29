@@ -205,7 +205,7 @@ export default function WhyOrganikin() {
                     <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-4 italic">"{testimonial.comment}"</p>
+                <p className="text-gray-600 mb-4 italic">{`"Some text "with quotes" in it"`}</p>
                 <div className="font-semibold text-gray-800">- {testimonial.name}</div>
               </motion.div>
             ))}
