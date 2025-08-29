@@ -251,7 +251,7 @@ export default function AdminRequestsPage() {
                             {req.description && (
                               <div className="mb-3">
                                 <p className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded-lg">
-                                  "{req.description}"
+                                {`"${req.description}"`}
                                 </p>
                               </div>
                             )}
